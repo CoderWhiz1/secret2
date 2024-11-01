@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: right; /* لضبط النص من اليمين لليسار */
+        }
+
+        header {
+            background: linear-gradient(90deg, #ff77a0, #ff6f91);
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 28px; /* زيادة حجم الخط في الرأس */
+            font-weight: bold;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #ff6f91; /* حدود ملونة */
+        }
+
+        #messages {
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            text-align: right; /* لضبط الرسالة من اليمين لليسار */
+            position: relative; /* للسماح بتنسيق إضافي */
+        }
+
+        .message.received {
+            background-color: #ff6f91; /* لون وردي للرسالة الواردة */
+            font-size: 20px; /* حجم نص الرسالة الواردة */
+        }
+
+        .message.pending {
+            background-color: #ff9800; /* لون برتقالي للرسائل المعلقة */
+            font-size: 16px; /* حجم نص الرسالة المعلقة */
+            opacity: 0.8; /* انخفاض الشفافية */
+            font-style: italic; /* خط مائل للرسائل المعلقة */
+        }
+
+        .message .date {
+            font-size: 12px; /* حجم خط التاريخ */
+            color: #ffffffcc; /* لون التاريخ ب opacity */
+            position: absolute;
+            bottom: 5px; /* المسافة من الأسفل */
+            left: 10px; /* المسافة من اليسار */
+        }
+
+        input[type="text"], input[type="datetime-local"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 2px solid #ff6f91; /* حدود ملونة */
+            border-radius: 5px;
+            direction: rtl;
+            font-size: 16px; /* حجم خط أكبر */
+        }
+
+        textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 2px solid #ff6f91; /* حدود ملونة */
+            border-radius: 5px;
+            resize: vertical; /* لتمكين تغيير الحجم عموديًا */
+            font-size: 16px; /* حجم خط أكبر */
+        }
+
+        button {
+            background-color: #ff77a0; /* لون زر جميل */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px; /* حجم خط أكبر */
+        }
+
+        button:hover {
+            background-color: #e55c7a; /* تغيير اللون عند التمرير */
+        }
+
+        .login, .message-form {
+            display: none;
+        }
+
+        .login.active, .message-form.active {
+            display: block;
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #ff6f91;
+            text-align: center;
+            font-weight: bold; /* جعل الخط أكثر تميزًا */
+        }
+        
+        /* أيقونة القفل */
+        .icon {
+            font-size: 30px;
+            margin-left: 10px;
+            vertical-align: middle; /* لضبط الأيقونة مع النص */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <span class="icon">🔒</span> <!-- أيقونة القفل -->
+        Secret
+    </header>
+
+    <div class="container">
+        <div class="login active" id="login">
+            <h2>تسجيل الدخول</h2>
+            <input type="password" id="password" placeholder="كلمة المرور" required>
+            <button id="loginBtn">دخول</button>
+        </div>
+
+        <div class="message-form" id="messageForm">
+            <h2>الرسائل المرسلة</h2>
+            <div id="messages"></div>
+            <textarea id="message" placeholder="اكتب رسالتك هنا..." rows="3" required></textarea>
+            <input type="datetime-local" id="time" required>
+            <button id="send">إرسال   </button>
+        </div>
+
+        <footer>
+            🗝️كل شيء هنا هو سري
+        </footer>
+    </div>
+
+    <script>
+        const correctPassword = "Heart4Teacher"; // كلمة المرور الموحدة
+        const messagesKey = "secret"; // مفتاح تخزين الرسائل في localStorage
+        let messages = JSON.parse(localStorage.getItem(messagesKey)) || [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedPassword = localStorage.getItem('password');
+            if (storedPassword === correctPassword) {
+                loadMessages();
+                document.getElementById('login').classList.remove('active');
+                document.getElementById('messageForm').classList.add('active');
+            }
+        });
+
+        document.getElementById('loginBtn').addEventListener('click', function() {
+            const password = document.getElementById('password').value;
+
+            if (password === correctPassword) {
+                localStorage.setItem('password', password);
+                document.getElementById('login').classList.remove('active');
+                document.getElementById('messageForm').classList.add('active');
+                loadMessages();
+            } else {
+                alert('كلمة المرور غير صحيحة!');
+            }
+        });
+
+        document.getElementById('send').addEventListener('click', function() {
+            const message = document.getElementById('message').value;
+            const time = new Date(document.getElementById('time').value).getTime();
+
+            if (message && time) {
+                messages.push({ message, time });
+                messages.sort((a, b) => a.time - b.time); // ترتيب الرسائل حسب الوقت
+                localStorage.setItem(messagesKey, JSON.stringify(messages)); // حفظ الرسائل في localStorage
+                document.getElementById('message').value = '';
+                document.getElementById('time').value = '';
+                loadMessages();
+            } else {
+                alert('يرجى ملء جميع الحقول!');
+            }
+        });
+
+        function loadMessages() {
+            const currentTime = new Date().getTime();
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+
+            messages.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+
+                if (msg.time <= currentTime) {
+                    messageElement.classList.add('received');
+                    messageElement.textContent = `الرسالة: ${msg.message}`;
+                    const dateElement = document.createElement('span');
+                    dateElement.classList.add('date');
+                    dateElement.textContent = ` (وصلت في: ${new Date(msg.time).toLocaleString()})`;
+                    messageElement.appendChild(dateElement);
+                } else {
+                    messageElement.classList.add('pending');
+                    messageElement.textContent = `رسالة مهمة ستصل في ${new Date(msg.time).toLocaleString()}`;
+                }
+
+                messagesDiv.appendChild(messageElement);
+            });
+        }
+
+        // تحديث الرسائل كل دقيقة للتحقق من الوقت
+        setInterval(loadMessages, 60000);
+    </script>
+</body>
+</html>
